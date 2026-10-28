@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IELTS Reading Test</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #222; background: #eef0f4; font-size: 15px; }
+
+  /* ---------- Test page ---------- */
+  .topbar { display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: #1f2d5c; color: #fff; flex-wrap: wrap; }
+  .brand { font-weight: bold; font-size: 18px; letter-spacing: .5px; }
+  .brand span { font-weight: normal; opacity: .8; }
+  .topbar .title { flex: 1; font-size: 14px; opacity: .9; min-width: 120px; }
+  .topbar input.student { padding: 6px 8px; border: none; border-radius: 3px; width: 170px; }
+  .timer { font-variant-numeric: tabular-nums; background: #fff; color: #1f2d5c; padding: 6px 12px; border-radius: 3px; font-weight: bold; min-width: 70px; text-align: center; }
+  .timer.warn { background: #f4c542; }
+  .btn { padding: 7px 14px; border: none; border-radius: 3px; background: #f4c542; color: #1f2d5c; font-weight: bold; cursor: pointer; font-size: 14px; }
+  .btn.light { background: transparent; color: #fff; border: 1px solid #fff; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.secondary { background: #dfe3ec; color: #1f2d5c; }
+  .btn.danger { background: #fbe3e0; color: #b42318; }
+  .btn.small { padding: 4px 9px; font-size: 13px; }
+
+  .parts { display: flex; gap: 4px; padding: 0 20px; background: #dfe3ec; border-bottom: 1px solid #c9ced8; flex-wrap: wrap; }
+  .parts button { padding: 9px 16px; border: none; background: transparent; cursor: pointer; font-size: 14px; color: #1f2d5c; }
+  .parts button.active { background: #fff; font-weight: bold; border-top: 3px solid #1f2d5c; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; height: calc(100vh - 118px); }
+  .passage, .questions { overflow: auto; padding: 22px 30px 60px; }
+  .passage { background: #fff; border-right: 2px solid #c9ced8; line-height: 1.65; }
+  .passage h2 { font-size: 20px; margin-top: 0; color: #1f2d5c; }
+  .passage p { margin: 0 0 14px; text-align: justify; }
+  .questions { background: #fbfbfc; }
+  .instr { font-weight: bold; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid #ddd; }
+  .qhead { font-weight: bold; margin-top: 22px; font-size: 16px; color: #1f2d5c; }
+  .qinstr { margin: 4px 0 14px; font-style: italic; color: #444; }
+
+  .notes { background: #fff; border: 1px solid #d6dae3; border-radius: 4px; padding: 14px 18px; }
+  .nbox { text-align: center; font-size: 18px; margin: 0 0 8px; }
+  .nh { font-weight: bold; margin: 14px 0 4px; }
+  .noteline { margin: 10px 0; line-height: 2; }
+  .nt { margin: 8px 0; line-height: 2; }
+  .optbox { background: #fff; border: 1px solid #d6dae3; border-radius: 4px; padding: 10px 14px; margin-bottom: 12px; }
+  .optbox div { margin: 4px 0; }
+  .stmt { background: #fff; border: 1px solid #d6dae3; border-radius: 4px; padding: 12px 16px; margin-bottom: 10px; }
+  .stmt-text { margin-bottom: 8px; line-height: 1.5; }
+  .tf label { margin-right: 18px; cursor: pointer; font-size: 14px; }
+  .tf .opt { display: block; margin: 5px 0; }
+  .qno { display: inline-block; min-width: 26px; height: 22px; line-height: 22px; padding: 0 4px; text-align: center; background: #1f2d5c; color: #fff; border-radius: 2px; font-size: 12px; font-weight: bold; margin-right: 8px; vertical-align: middle; }
+  input.gap { width: 130px; padding: 3px 6px; border: 1px solid #8a93a8; border-radius: 2px; font-size: 14px; margin: 0 4px; vertical-align: middle; }
+  input.short { width: 280px; padding: 6px; border: 1px solid #8a93a8; border-radius: 2px; font-size: 14px; }
+  select { padding: 5px; font-size: 14px; max-width: 100%; }
+  input.gap:focus, input.short:focus { outline: 2px solid #f4c542; }
+
+  .result { background: #fff; border: 2px solid #1f2d5c; border-radius: 4px; padding: 16px 18px; margin-bottom: 20px; }
+  .result h3 { margin: 0 0 8px; color: #1f2d5c; }
+  .result table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+  .result th, .result td { border-bottom: 1px solid #e3e6ee; padding: 6px 8px; text-align: left; }
+  .result tr.ok td:last-child { color: #1a7f37; font-weight: bold; }
+  .result tr.bad td:last-child { color: #b42318; font-weight: bold; }
+
+  /* ---------- Builder ---------- */
+  .builder { position: fixed; inset: 0; background: #eef0f4; z-index: 20; overflow: auto; }
+  .builder[hidden] { display: none; }
+  .b-top { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 20px; background: #1f2d5c; color: #fff; z-index: 2; flex-wrap: wrap; }
+  .b-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  #errors { position: sticky; top: 56px; z-index: 1; padding: 0 20px; }
+  #errors div { background: #fde8e6; color: #b42318; padding: 6px 10px; margin: 6px 0; border-radius: 3px; font-size: 14px; }
+  #errors .ok { background: #e3f6e8; color: #1a7f37; }
+  #bbody { padding: 6px 20px 60px; max-width: 980px; margin: 0 auto; }
+  .card { background: #fff; border: 1px solid #d6dae3; border-radius: 6px; padding: 14px 16px; margin: 14px 0; }
+  .group { background: #fbfcfe; }
+  .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .card-head strong { flex: 1; color: #1f2d5c; }
+  .card h3 { margin: 0 0 8px; color: #1f2d5c; }
+  .card h4 { margin: 14px 0 6px; color: #1f2d5c; font-size: 13px; text-transform: uppercase; letter-spacing: .4px; }
+  .card label { display: block; font-size: 13px; color: #333; margin: 6px 0; }
+  .card label.chk { display: inline-flex; align-items: center; gap: 6px; margin-right: 14px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  input[type=text], input:not([type]), input[type=number], select, textarea { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid #aab1c2; border-radius: 3px; width: 100%; background: #fff; }
+  select { width: auto; max-width: 100%; }
+  textarea { resize: vertical; }
+  .row { display: flex; gap: 8px; align-items: center; margin: 6px 0; }
+  .row > input, .row > textarea { flex: 1; min-width: 0; }
+  .row > select { flex: 0 0 auto; }
+  .row .lbl { min-width: 22px; font-weight: bold; color: #1f2d5c; }
+  .item { border-top: 1px dashed #d6dae3; padding-top: 8px; margin-top: 8px; }
+  .item:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+  .opt { margin-left: 12px; }
+  .nums { font-size: 12px; background: #dfe3ec; padding: 3px 8px; border-radius: 10px; color: #1f2d5c; }
+  .hint { font-size: 12.5px; color: #555; margin: 6px 0; }
+  details summary { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">IELTS <span>Academic Reading</span></div>
+  <div class="title" id="testTitle"></div>
+  <input class="student" id="studentName" placeholder="Student name" aria-label="Student name">
+  <div class="timer" id="timer">--:--</div>
+  <button class="btn light" id="editBtn">Test builder</button>
+  <button class="btn light" id="downloadBtn">Download</button>
+  <button class="btn" id="submitBtn">Submit</button>
+</header>
+
+<nav class="parts" id="partTabs"></nav>
+
+<main class="split">
+  <section class="passage" id="passage"></section>
+  <section class="questions" id="questions"></section>
+</main>
+
+<!-- Holds the builder's data when the file is downloaded. Leave empty. -->
+<script type="text/plain" id="test-source"></script>
+
+<!-- Test builder -->
+<div class="builder" id="builder" hidden>
+  <div class="b-top">
+    <strong>Test builder</strong>
+    <div class="b-actions">
+      <button class="btn secondary small" data-act="example">Load example (replaces current)</button>
+      <button class="btn small" data-act="apply">Apply test</button>
+      <button class="btn secondary small" data-act="close">Close</button>
+    </div>
+  </div>
+  <div id="errors"></div>
+  <div id="bbody"></div>
+</div>
+
+<script>
+/* =========================== DATA & HELPERS =========================== */
+const TF_OPTIONS = { TFNG: ["TRUE", "FALSE", "NOT GIVEN"], YNNG: ["YES", "NO", "NOT GIVEN"] };
+const TYPE_LABELS = [
+  ["GAP", "Notes / gap fill"],
+  ["TFNG", "True / False / Not Given"],
+  ["YNNG", "Yes / No / Not Given"],
+  ["MCQ", "Multiple choice"],
+  ["MATCH", "Matching (headings, features…)"],
+  ["SHORT", "Short answer"]
+];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const norm = s => String(s || "").toLowerCase().replace(/[.,;:!?]+$/, "").replace(/\s+/g, " ").trim();
+const L = i => String.fromCharCode(65 + i);
+const clone = o => JSON.parse(JSON.stringify(o));
+const unesc = s => s.split("<\\/script").join("</script");
+const escForStore = s => s.split("</" + "script").join("<\\/script");
+
+const mkItem = (text, answer, options, correct, alts) => ({ text, answer, options: options || [], correct: correct || [], alts: alts || "" });
+const newItem = type => mkItem("", type === "TFNG" ? "TRUE" : type === "YNNG" ? "YES" : type === "MATCH" ? "A" : "", type === "MCQ" ? ["", "", ""] : [], [], "");
+const newGroup = type => ({ type, heading: "", instruction: "", box: "", lines: [], items: [], options: [] });
+const newPassage = () => ({ passageTitle: "", instruction: "", paragraphs: [""], groups: [] });
+
+const EXAMPLE_DOC = {
+  title: "Practice Reading Test",
+  time: 60,
+  labels: true,
+  parts: [{
+    passageTitle: "Urban beekeeping",
+    instruction: "You should spend about 20 minutes on Questions 1–18, which are based on the reading passage below.",
+    paragraphs: [
+      "Urban beekeeping has grown quickly over the past two decades. In many large cities, flat rooftops, balconies and community gardens now house hives that would once have been found only in the countryside. Supporters of the trend argue that cities can offer bees a surprisingly varied diet, since gardens, parks and window boxes flower at different times of the year.",
+      "The movement began partly as a response to concern about declining pollinator populations. Many farmers and researchers have warned that wild bees are under pressure from habitat loss and pesticide use. Some city councils have responded by encouraging residents to register their hives, while others have introduced training courses for first-time keepers.",
+      "Not everyone is convinced, however. Ecologists point out that a dense concentration of hives can place strain on wild bee species that compete for the same flowers. Others question whether the honey produced is worth the effort, given how small the harvest from a single rooftop colony can be.",
+      "Most experienced keepers agree that success depends on careful planning. Hives need a water source nearby, a sheltered position and a neighbour who does not object. Beekeepers are also advised to check their colonies regularly for disease, because a problem in one hive can quickly spread to others in the same area."
+    ],
+    groups: [
+      {
+        type: "GAP", heading: "Questions 1–6",
+        instruction: "Complete the notes below. Choose ONE WORD ONLY from the passage for each answer.",
+        box: "Urban beekeeping: key points",
+        lines: [
+          { kind: "h", text: "Growth" },
+          { kind: "b", text: "Hives are now found on flat [rooftops/rooftop] and in community gardens." },
+          { kind: "b", text: "Cities can offer bees a varied [diet], because gardens and parks flower at different times." },
+          { kind: "h", text: "Concerns" },
+          { kind: "b", text: "Concern about the decline of [pollinator] populations encouraged the movement." },
+          { kind: "b", text: "Some councils ask residents to [register] their hives." },
+          { kind: "b", text: "Dense hives may harm native wild bee [species]." },
+          { kind: "t", text: "Every hive needs a nearby [water] source." }
+        ],
+        items: [], options: []
+      },
+      {
+        type: "TFNG", heading: "Questions 7–9",
+        instruction: "Do the following statements agree with the information given in the passage? Write TRUE, FALSE or NOT GIVEN.",
+        box: "", lines: [], options: [],
+        items: [
+          mkItem("Beekeeping in cities has become more popular over the last twenty years.", "TRUE"),
+          mkItem("Most urban beekeepers make a good living by selling honey.", "NOT GIVEN"),
+          mkItem("Wild bees may struggle when many hives are placed in one area.", "TRUE")
+        ]
+      },
+      {
+        type: "MCQ", heading: "Question 10",
+        instruction: "Choose the correct letter, A, B or C.",
+        box: "", lines: [], options: [],
+        items: [
+          mkItem("According to the passage, what do some councils ask residents to do?", "", ["build new gardens", "register their hives", "sell honey locally"], ["B"])
+        ]
+      },
+      {
+        type: "MCQ", heading: "Questions 11–12",
+        instruction: "Choose TWO letters, A–E.",
+        box: "", lines: [], options: [],
+        items: [
+          mkItem("Which TWO requirements for a hive does the passage mention?", "", ["a water source nearby", "a sheltered position", "a lot of sunlight", "a large garden", "a neighbour who does not object"], ["A", "B"])
+        ]
+      },
+      {
+        type: "MATCH", heading: "Questions 13–16",
+        instruction: "The passage has four paragraphs, A–D. Choose the correct heading for each paragraph from the list of headings below. There is one extra heading.",
+        box: "", lines: [],
+        options: ["Why cities suit bees", "Concern about wild pollinators", "Arguments against urban hives", "Practical requirements for keepers", "The rising cost of honey"],
+        items: [
+          mkItem("Paragraph A", "A"),
+          mkItem("Paragraph B", "B"),
+          mkItem("Paragraph C", "C"),
+          mkItem("Paragraph D", "D")
+        ]
+      },
+      {
+        type: "SHORT", heading: "Questions 17–18",
+        instruction: "Answer the questions. Choose ONE WORD ONLY from the passage for each answer.",
+        box: "", lines: [], options: [],
+        items: [
+          mkItem("How often are colonies advised to be checked?", "", [], [], "regularly"),
+          mkItem("How would you describe the honey harvest from a single rooftop colony?", "", [], [], "small")
+        ]
+      }
+    ]
+  }]
+};
+
+/* =========================== COMPILER =========================== */
+// Turns the editor's data into a test: numbers questions automatically,
+// turns [answer] brackets in notes into gaps, and collects any errors.
+function compileTest(doc) {
+  const errors = [];
+  let n = 0;
+  const next = () => ++n;
+  const parts = doc.parts.map((P, pi) => {
+    const paragraphs = P.paragraphs.filter(s => s.trim());
+    if (!paragraphs.length) errors.push(`Passage ${pi + 1}: add at least one paragraph`);
+    const groups = P.groups.map((G, gi) => compileGroup(G, next, errors, `Passage ${pi + 1}, group ${gi + 1}`));
+    return { passageTitle: P.passageTitle || `Passage ${pi + 1}`, instruction: P.instruction || "", paragraphs, groups };
+  });
+  if (!parts.length) errors.push("Add at least one passage");
+  return {
+    test: { title: doc.title || "Untitled test", time: doc.time || 60, labels: doc.labels !== false, parts },
+    errors
+  };
+}
+
+function compileGroup(G, next, errors, where) {
+  const out = { type: G.type, heading: G.heading || "", instruction: G.instruction || "", box: G.box || "", lines: [], items: [], options: [], range: "" };
+  const nums = [];
+
+  if (G.type === "GAP") {
+    G.lines.forEach(l => {
+      if (!l.text.trim()) return;
+      const text = l.text.replace(/\[([^\]]+)\]/g, (m, inner) => {
+        const no = next();
+        nums.push(no);
+        out.items.push({ nos: [no], text: "", answers: inner.split("/").map(s => s.trim()).filter(Boolean) });
+        return `{${no}}`;
+      });
+      out.lines.push({ kind: l.kind, text });
+    });
+    if (!nums.length) errors.push(`${where}: add at least one answer in [square brackets]`);
+  } else if (G.type === "MATCH") {
+    out.options = G.options.slice();
+    if (out.options.length < 2) errors.push(`${where}: add at least two options`);
+    G.items.forEach((it, i) => {
+      const no = next();
+      nums.push(no);
+      if (!it.text.trim()) errors.push(`${where}, item ${i + 1}: type the item text`);
+      if (!it.answer || it.answer.charCodeAt(0) - 65 >= out.options.length) errors.push(`${where}, item ${i + 1}: choose the answer letter`);
+      out.items.push({ nos: [no], text: it.text, answers: [it.answer] });
+    });
+  } else if (G.type === "MCQ") {
+    G.items.forEach((it, i) => {
+      const where2 = `${where}, item ${i + 1}`;
+      const correct = [...it.correct].sort();
+      if (!it.text.trim()) errors.push(`${where2}: type the question`);
+      if (it.options.filter(s => s.trim()).length < 2) errors.push(`${where2}: add at least two options`);
+      if (!correct.length) errors.push(`${where2}: tick the correct answer`);
+      const k = Math.max(1, correct.length), nos = [];
+      for (let j = 0; j < k; j++) { const no = next(); nos.push(no); nums.push(no); }
+      out.items.push({ nos, text: it.text, options: it.options.slice(), answers: correct.length ? correct : ["A"], multi: nos.length > 1 });
+    });
+  } else if (G.type === "SHORT") {
+    G.items.forEach((it, i) => {
+      const no = next();
+      nums.push(no);
+      const answers = it.alts.split(",").map(s => s.trim()).filter(Boolean);
+      if (!it.text.trim()) errors.push(`${where}, item ${i + 1}: type the question`);
+      if (!answers.length) errors.push(`${where}, item ${i + 1}: add the accepted answer(s)`);
+      out.items.push({ nos: [no], text: it.text, answers });
+    });
+  } else {
+    // TFNG and YNNG
+    const allowed = TF_OPTIONS[G.type] || TF_OPTIONS.TFNG;
+    G.items.forEach((it, i) => {
+      const no = next();
+      nums.push(no);
+      if (!it.text.trim()) errors.push(`${where}, item ${i + 1}: type the statement`);
+      if (!allowed.includes(it.answer)) errors.push(`${where}, item ${i + 1}: choose the answer`);
+      out.items.push({ nos: [no], text: it.text, answers: [it.answer] });
+    });
+  }
+
+  out.range = nums.length ? (nums.length > 1 ? `${nums[0]}–${nums[nums.length - 1]}` : `${nums[0]}`) : "";
+  return out;
+}
+
+/* =========================== STATE =========================== */
+const state = {
+  doc: null,
+  test: null,
+  part: 0,
+  responses: {},
+  submitted: false,
+  secondsLeft: 3600,
+  timerId: null,
+  resultHTML: ""
+};
+
+/* =========================== TEST PAGE =========================== */
+function renderGapLine(line, dis) {
+  return esc(line).replace(/\{(\d+)\}/g, (m, n) =>
+    `<span class="qno">${n}</span><input class="gap" data-no="${n}" value="${esc(state.responses[n] || "")}" ${dis} autocomplete="off" spellcheck="false">`);
+}
+
+const badge = nos => `<span class="qno">${nos.length > 1 ? nos[0] + "–" + nos[nos.length - 1] : nos[0]}</span>`;
+const box = (nos, text, body) => `<div class="stmt"><div class="stmt-text">${badge(nos)}${esc(text)}</div><div class="tf">${body}</div></div>`;
+
+function renderItem(g, it, dis) {
+  const no = it.nos[0];
+  if (g.type === "TFNG" || g.type === "YNNG") {
+    return box(it.nos, it.text, TF_OPTIONS[g.type].map(o =>
+      `<label><input type="radio" name="q${no}" value="${o}" data-no="${no}" ${state.responses[no] === o ? "checked" : ""} ${dis}> ${o}</label>`).join(""));
+  }
+  if (g.type === "MCQ") {
+    if (it.multi) {
+      const chosen = Array.isArray(state.responses[no]) ? state.responses[no] : [];
+      return box(it.nos, it.text, it.options.map((o, i) =>
+        `<label class="opt"><input type="checkbox" data-no="${no}" value="${L(i)}" ${chosen.includes(L(i)) ? "checked" : ""} ${dis}> ${L(i)}. ${esc(o)}</label>`).join(""));
+    }
+    return box(it.nos, it.text, it.options.map((o, i) =>
+      `<label class="opt"><input type="radio" name="q${no}" value="${L(i)}" data-no="${no}" ${state.responses[no] === L(i) ? "checked" : ""} ${dis}> ${L(i)}. ${esc(o)}</label>`).join(""));
+  }
+  // SHORT
+  return box(it.nos, it.text,
+    `<input class="short" type="text" data-no="${no}" value="${esc(state.responses[no] || "")}" ${dis} autocomplete="off">`);
+}
+
+function renderGroup(g) {
+  const dis = state.submitted ? "disabled" : "";
+  let h = `<div class="qhead">${esc(g.heading)}</div><div class="qinstr">${esc(g.instruction)}</div>`;
+
+  if (g.type === "GAP") {
+    const body = g.lines.map(l =>
+      `<p class="${l.kind === "h" ? "nh" : l.kind === "t" ? "nt" : "noteline"}">${renderGapLine(l.text, dis)}</p>`).join("");
+    return h + `<div class="notes">` + (g.box ? `<h3 class="nbox">${esc(g.box)}</h3>` : "") + body + `</div>`;
+  }
+
+  if (g.type === "MATCH") {
+    h += `<div class="optbox"><strong>Options</strong>` +
+      g.options.map((o, i) => `<div><b>${L(i)}</b> ${esc(o)}</div>`).join("") + `</div>`;
+    h += g.items.map(it => {
+      const no = it.nos[0], cur = state.responses[no] || "";
+      return `<div class="stmt"><div class="stmt-text">${badge(it.nos)}${esc(it.text)}</div>
+        <select data-no="${no}" ${dis}><option value="">— choose —</option>` +
+        g.options.map((o, i) => `<option value="${L(i)}" ${cur === L(i) ? "selected" : ""}>${L(i)} — ${esc(o)}</option>`).join("") +
+        `</select></div>`;
+    }).join("");
+    return h;
+  }
+
+  return h + g.items.map(it => renderItem(g, it, dis)).join("");
+}
+
+function renderPassage() {
+  const part = state.test.parts[state.part];
+  $("passage").innerHTML = `<h2>${esc(part.passageTitle)}</h2>` +
+    part.paragraphs.map((p, i) =>
+      `<p>${state.test.labels === false ? "" : `<strong>${L(i)}</strong>&nbsp;&nbsp;`}${esc(p)}</p>`).join("");
+}
+
+function renderQuestions() {
+  const part = state.test.parts[state.part];
+  $("questions").innerHTML = state.resultHTML +
+    (part.instruction ? `<div class="instr">${esc(part.instruction)}</div>` : "") +
+    part.groups.map(renderGroup).join("");
+}
+
+function renderTabs() {
+  $("partTabs").innerHTML = state.test.parts.map((p, i) =>
+    `<button class="${i === state.part ? "active" : ""}" data-part="${i}">Reading Passage ${i + 1}</button>`).join("");
+}
+
+function renderAll() { renderTabs(); renderPassage(); renderQuestions(); }
+
+function updateTimer() {
+  const m = Math.floor(state.secondsLeft / 60), s = state.secondsLeft % 60;
+  const t = $("timer");
+  t.textContent = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  t.classList.toggle("warn", state.secondsLeft <= 300);
+}
+
+function tick() {
+  if (state.submitted) return;
+  state.secondsLeft--;
+  updateTimer();
+  if (state.secondsLeft <= 0) submitTest(true);
+}
+
+function markItem(it) {
+  if (it.multi) {
+    const sel = Array.isArray(state.responses[it.nos[0]]) ? state.responses[it.nos[0]] : [];
+    const hits = sel.length === it.answers.length ? it.answers.filter(a => sel.includes(a)).length : 0;
+    return it.nos.map((n, k) => ({ no: n, ok: k < hits, mine: sel.join(", "), correct: it.answers[k] }));
+  }
+  const n = it.nos[0], mine = state.responses[n] || "";
+  return [{ no: n, ok: mine !== "" && it.answers.map(norm).includes(norm(mine)), mine, correct: it.answers[0] }];
+}
+
+function allMarks() {
+  const out = [];
+  state.test.parts.forEach(p => p.groups.forEach(g => g.items.forEach(it => out.push(...markItem(it)))));
+  return out.sort((a, b) => a.no - b.no);
+}
+
+function submitTest(auto) {
+  if (state.submitted) return;
+  state.submitted = true;
+  clearInterval(state.timerId);
+  $("submitBtn").disabled = true;
+
+  const marks = allMarks();
+  const correct = marks.filter(m => m.ok).length, total = marks.length;
+  const name = $("studentName").value ? " – " + esc($("studentName").value) : "";
+  const rows = marks.map(m =>
+    `<tr class="${m.ok ? "ok" : "bad"}"><td>${m.no}</td><td>${esc(m.mine || "—")}</td><td>${esc(m.correct)}</td><td>${m.ok ? "✓" : "✗"}</td></tr>`).join("");
+
+  state.resultHTML = `
+    <div class="result">
+      <h3>Result${name}${auto ? " (time up)" : ""}</h3>
+      <p><strong>${correct} / ${total}</strong> correct (${total ? Math.round(correct / total * 100) : 0}%)</p>
+      <table>
+        <thead><tr><th>Q</th><th>Answer given</th><th>Correct answer</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  renderAll();
+  window.scrollTo(0, 0);
+}
+
+function startSession(test) {
+  clearInterval(state.timerId);
+  state.test = test;
+  state.part = 0;
+  state.responses = {};
+  state.submitted = false;
+  state.resultHTML = "";
+  state.secondsLeft = test.time * 60;
+  $("submitBtn").disabled = false;
+  $("testTitle").textContent = test.title;
+  document.title = test.title;
+  updateTimer();
+  state.timerId = setInterval(tick, 1000);
+  renderAll();
+}
+
+function handleAnswer(e) {
+  const t = e.target;
+  if (!t.dataset || !t.dataset.no || state.submitted) return;
+  const no = t.dataset.no;
+  if (t.type === "checkbox") {
+    const set = new Set(Array.isArray(state.responses[no]) ? state.responses[no] : []);
+    t.checked ? set.add(t.value) : set.delete(t.value);
+    state.responses[no] = [...set];
+    return;
+  }
+  if (t.type === "radio" && !t.checked) return;
+  state.responses[no] = t.value;
+}
+
+function slug(s) {
+  return (s || "ielts-test").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "ielts-test";
+}
+
+function downloadTest() {
+  $("test-source").textContent = escForStore(JSON.stringify(state.doc));
+  const html = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+  a.download = slug(state.doc.title) + ".html";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* =========================== BUILDER =========================== */
+function removeMatchOption(G, i) {
+  G.options.splice(i, 1);
+  G.items.forEach(it => {
+    if (it.answer === L(i)) it.answer = "";
+    else if (it.answer && it.answer > L(i)) it.answer = String.fromCharCode(it.answer.charCodeAt(0) - 1);
+  });
+}
+
+function removeMcqOption(it, x) {
+  it.options.splice(x, 1);
+  it.correct = it.correct.filter(l => l !== L(x)).map(l => l > L(x) ? String.fromCharCode(l.charCodeAt(0) - 1) : l);
+}
+
+function gapBody(G, p, g) {
+  const a = `data-p="${p}" data-g="${g}"`;
+  let h = `<label>Box title (optional)<input data-k="gbox" ${a} value="${esc(G.box)}"></label>
+    <h4>Lines in the box</h4>`;
+  G.lines.forEach((l, i) => {
+    h += `<div class="row">
+      <select data-k="lkind" ${a} data-i="${i}">
+        <option value="h" ${l.kind === "h" ? "selected" : ""}>Sub-heading</option>
+        <option value="b" ${l.kind === "b" ? "selected" : ""}>Bullet</option>
+        <option value="t" ${l.kind === "t" ? "selected" : ""}>Plain line</option>
+      </select>
+      <input data-k="line" ${a} data-i="${i}" value="${esc(l.text)}" placeholder="Hives are on flat [rooftops]">
+      <button class="btn danger small" data-act="del-line" ${a} data-i="${i}">✕</button>
+    </div>`;
+  });
+  h += `<button class="btn secondary small" data-act="add-line" ${a}>+ Add line</button>
+    <p class="hint">Put each answer in square brackets, for example <em>Hives are on flat [rooftops]</em>. For alternative answers use a slash: [rooftops/rooftop]. Numbers are assigned automatically.</p>`;
+  return h;
+}
+
+function matchBody(G, p, g) {
+  const a = `data-p="${p}" data-g="${g}"`;
+  const letters = G.options.map((_, i) => L(i));
+  let h = `<h4>Options (headings or list items)</h4>`;
+  G.options.forEach((o, i) => {
+    h += `<div class="row"><span class="lbl">${L(i)}</span>
+      <input data-k="gopt" ${a} data-i="${i}" value="${esc(o)}">
+      <button class="btn danger small" data-act="del-gopt" ${a} data-i="${i}">✕</button></div>`;
+  });
+  h += `<button class="btn secondary small" data-act="add-gopt" ${a}>+ Add option</button>
+    <h4>Items to match</h4>`;
+  G.items.forEach((it, i) => {
+    h += `<div class="row">
+      <input data-k="itext" ${a} data-i="${i}" value="${esc(it.text)}" placeholder="Paragraph A">
+      <select data-k="ians" ${a} data-i="${i}">${letters.map(l =>
+        `<option value="${l}" ${it.answer === l ? "selected" : ""}>${l}</option>`).join("")}</select>
+      <button class="btn danger small" data-act="del-item" ${a} data-i="${i}">✕</button>
+    </div>`;
+  });
+  h += `<button class="btn secondary small" data-act="add-item" ${a}>+ Add item</button>`;
+  return h;
+}
+
+function itemsBody(G, p, g) {
+  const a = `data-p="${p}" data-g="${g}"`;
+  let h = "";
+  G.items.forEach((it, i) => {
+    const ia = `${a} data-i="${i}"`;
+    if (G.type === "TFNG" || G.type === "YNNG") {
+      h += `<div class="item"><div class="row">
+        <input data-k="itext" ${ia} value="${esc(it.text)}" placeholder="Statement">
+        <select data-k="ians" ${ia}>${TF_OPTIONS[G.type].map(o =>
+          `<option value="${o}" ${it.answer === o ? "selected" : ""}>${o}</option>`).join("")}</select>
+        <button class="btn danger small" data-act="del-item" ${ia}>✕</button>
+      </div></div>`;
+    } else if (G.type === "MCQ") {
+      h += `<div class="item"><div class="row">
+        <input data-k="itext" ${ia} value="${esc(it.text)}" placeholder="Question">
+        <button class="btn danger small" data-act="del-item" ${ia}>✕</button>
+      </div>`;
+      it.options.forEach((o, x) => {
+        h += `<div class="row opt">
+          <span class="lbl">${L(x)}</span>
+          <input data-k="opt" ${ia} data-x="${x}" value="${esc(o)}" placeholder="Option">
+          <label class="chk"><input type="checkbox" data-k="mchk" ${ia} data-x="${x}" value="${L(x)}" ${it.correct.includes(L(x)) ? "checked" : ""}> Correct</label>
+          <button class="btn danger small" data-act="del-opt" ${ia} data-x="${x}">✕</button>
+        </div>`;
+      });
+      h += `<button class="btn secondary small" data-act="add-opt" ${ia}>+ Add option</button>
+        <p class="hint">Tick the correct answer. Ticking two creates two numbers, for a "choose TWO" question.</p></div>`;
+    } else {
+      // SHORT
+      h += `<div class="item"><div class="row">
+        <input data-k="itext" ${ia} value="${esc(it.text)}" placeholder="Question">
+        <button class="btn danger small" data-act="del-item" ${ia}>✕</button>
+      </div>
+      <div class="row"><input data-k="ialts" ${ia} value="${esc(it.alts)}" placeholder="Accepted answers, separated by commas (e.g. rooftops, rooftop)"></div></div>`;
+    }
+  });
+  h += `<button class="btn secondary small" data-act="add-item" ${a}>+ Add item</button>`;
+  return h;
+}
+
+function groupCard(G, p, g, cg) {
+  const nums = cg && cg.range ? `<span class="nums">Numbers ${cg.range}</span>` : `<span class="nums">No numbers yet</span>`;
+  const typeOpts = TYPE_LABELS.map(([v, l]) => `<option value="${v}" ${G.type === v ? "selected" : ""}>${l}</option>`).join("");
+  let h = `<div class="card group">
+    <div class="card-head"><strong>Question group ${g + 1}</strong>${nums}
+      <button class="btn danger small" data-act="del-group" data-p="${p}" data-g="${g}">Remove group</button></div>
+    <div class="grid2">
+      <label>Question type<select data-k="gtype" data-p="${p}" data-g="${g}">${typeOpts}</select></label>
+      <label>Heading (for example: Questions 1–6)<input data-k="ghead" data-p="${p}" data-g="${g}" value="${esc(G.heading)}"></label>
+    </div>
+    <label>Instruction<textarea rows="2" data-k="ginstr" data-p="${p}" data-g="${g}">${esc(G.instruction)}</textarea></label>`;
+  if (G.type === "GAP") h += gapBody(G, p, g);
+  else if (G.type === "MATCH") h += matchBody(G, p, g);
+  else h += itemsBody(G, p, g);
+  return h + `</div>`;
+}
+
+function passageCard(P, p, cp) {
+  const D = state.doc;
+  let h = `<div class="card">
+    <div class="card-head"><strong>Passage ${p + 1}</strong>
+      <button class="btn danger small" data-act="del-passage" data-p="${p}">Remove passage</button></div>
+    <label>Passage title<input data-k="ptitle" data-p="${p}" value="${esc(P.passageTitle)}"></label>
+    <label>Instruction shown above the questions<textarea rows="2" data-k="pinstr" data-p="${p}">${esc(P.instruction)}</textarea></label>
+    <h4>Paragraphs</h4>`;
+  P.paragraphs.forEach((t, i) => {
+    h += `<div class="row">
+      <span class="lbl">${D.labels !== false ? L(i) : ""}</span>
+      <textarea rows="4" data-k="para" data-p="${p}" data-i="${i}">${esc(t)}</textarea>
+      <button class="btn danger small" data-act="del-para" data-p="${p}" data-i="${i}">✕</button>
+    </div>`;
+  });
+  h += `<button class="btn secondary small" data-act="add-para" data-p="${p}">+ Add paragraph</button>
+    <h4>Questions</h4>`;
+  P.groups.forEach((G, g) => { h += groupCard(G, p, g, cp && cp.groups[g]); });
+  h += `<button class="btn secondary small" data-act="add-group" data-p="${p}">+ Add question group</button></div>`;
+  return h;
+}
+
+function renderBuilder() {
+  const D = state.doc;
+  const compiled = compileTest(D).test;
+  let h = `<div class="card"><h3>Test details</h3>
+    <div class="grid2">
+      <label>Test title<input data-k="title" value="${esc(D.title)}"></label>
+      <label>Time (minutes)<input type="number" min="1" data-k="time" value="${esc(D.time)}"></label>
+    </div>
+    <label class="chk"><input type="checkbox" data-k="labels" ${D.labels !== false ? "checked" : ""}> Show paragraph letters (A, B, C…)</label>
+  </div>`;
+  D.parts.forEach((P, p) => { h += passageCard(P, p, compiled.parts[p]); });
+  h += `<button class="btn secondary" data-act="add-passage">+ Add passage</button>`;
+  $("bbody").innerHTML = h;
+}
+
+function onBuilderClick(e) {
+  const b = e.target.closest("[data-act]");
+  if (!b) return;
+  const act = b.dataset.act, D = state.doc;
+  const P = +b.dataset.p, G = +b.dataset.g, I = +b.dataset.i, X = +b.dataset.x;
+  const grp = () => D.parts[P].groups[G];
+  const itm = () => grp().items[I];
+
+  switch (act) {
+    case "apply": applyBuilder(); return;
+    case "close": $("builder").hidden = true; return;
+    case "example": state.doc = clone(EXAMPLE_DOC); break;
+    case "add-passage": D.parts.push(newPassage()); break;
+    case "del-passage": D.parts.splice(P, 1); break;
+    case "add-para": D.parts[P].paragraphs.push(""); break;
+    case "del-para": D.parts[P].paragraphs.splice(I, 1); break;
+    case "add-group": D.parts[P].groups.push(newGroup("GAP")); break;
+    case "del-group": D.parts[P].groups.splice(G, 1); break;
+    case "add-line": grp().lines.push({ kind: "b", text: "" }); break;
+    case "del-line": grp().lines.splice(I, 1); break;
+    case "add-gopt": grp().options.push(""); break;
+    case "del-gopt": removeMatchOption(grp(), I); break;
+    case "add-item": grp().items.push(newItem(grp().type)); break;
+    case "del-item": grp().items.splice(I, 1); break;
+    case "add-opt": itm().options.push(""); break;
+    case "del-opt": removeMcqOption(itm(), X); break;
+    default: return;
+  }
+  renderBuilder();
+}
+
+function onBuilderChange(e) {
+  const t = e.target, k = t.dataset.k;
+  if (!k) return;
+  // Selects and checkboxes are handled on "change" only, to avoid double work.
+  if (e.type === "input" && (t.tagName === "SELECT" || t.type === "checkbox")) return;
+
+  const D = state.doc;
+  const P = +t.dataset.p, G = +t.dataset.g, I = +t.dataset.i, X = +t.dataset.x;
+  const grp = () => D.parts[P].groups[G];
+  const itm = () => grp().items[I];
+
+  switch (k) {
+    case "title": D.title = t.value; break;
+    case "time": D.time = Math.max(1, parseInt(t.value, 10) || 60); break;
+    case "labels": D.labels = t.checked; renderBuilder(); break;
+    case "ptitle": D.parts[P].passageTitle = t.value; break;
+    case "pinstr": D.parts[P].instruction = t.value; break;
+    case "para": D.parts[P].paragraphs[I] = t.value; break;
+    case "gtype": grp().type = t.value; renderBuilder(); break;
+    case "ghead": grp().heading = t.value; break;
+    case "ginstr": grp().instruction = t.value; break;
+    case "gbox": grp().box = t.value; break;
+    case "lkind": grp().lines[I].kind = t.value; break;
+    case "line": grp().lines[I].text = t.value; break;
+    case "gopt": grp().options[I] = t.value; break;
+    case "itext": itm().text = t.value; break;
+    case "ians": itm().answer = t.value; break;
+    case "ialts": itm().alts = t.value; break;
+    case "opt": itm().options[X] = t.value; break;
+    case "mchk": {
+      const set = new Set(itm().correct);
+      if (t.checked) set.add(t.value); else set.delete(t.value);
+      itm().correct = [...set].sort();
+      renderBuilder();
+      break;
+    }
+  }
+  if (k === "title" || k === "time") { /* header text is refreshed on Apply */ }
+}
+
+function applyBuilder() {
+  const { test, errors } = compileTest(state.doc);
+  if (errors.length) {
+    $("errors").innerHTML = errors.map(e => `<div>${esc(e)}</div>`).join("");
+    return;
+  }
+  startSession(test);
+  $("builder").hidden = true;
+}
+
+/* =========================== WIRING =========================== */
+$("partTabs").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-part]");
+  if (!btn) return;
+  state.part = Number(btn.dataset.part);
+  renderAll();
+});
+$("questions").addEventListener("input", handleAnswer);
+$("questions").addEventListener("change", handleAnswer);
+$("submitBtn").addEventListener("click", () => { if (confirm("Submit the test now?")) submitTest(false); });
+$("downloadBtn").addEventListener("click", downloadTest);
+$("editBtn").addEventListener("click", () => {
+  $("errors").innerHTML = "";
+  $("builder").hidden = false;
+  renderBuilder();
+});
+$("builder").addEventListener("click", onBuilderClick);
+$("builder").addEventListener("input", onBuilderChange);
+$("builder").addEventListener("change", onBuilderChange);
+
+/* =========================== START =========================== */
+let loaded = null;
+try {
+  const raw = unesc($("test-source").textContent).trim();
+  if (raw) loaded = JSON.parse(raw);
+} catch (err) {
+  loaded = null;
+}
+state.doc = loaded && loaded.parts ? loaded : clone(EXAMPLE_DOC);
+startSession(compileTest(state.doc).test);
+</script>
+</body>
+</html>
